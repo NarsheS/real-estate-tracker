@@ -1,6 +1,10 @@
 from scraper import *
 import json
 
+from api import Base, engine, Property, PriceHistory
+
+Base.metadata.create_all(bind=engine)
+
 url = "https://www.olx.com.br/imoveis/venda"
 
 # Acessa a página simulando um usuário no navegador
