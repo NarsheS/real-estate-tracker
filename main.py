@@ -59,3 +59,11 @@ for ad in parsed:
     db.add(history)
 
 db.commit()
+
+print(
+    db.query(Property).count()
+)
+
+print(
+    db.query(PriceHistory).count()
+)
