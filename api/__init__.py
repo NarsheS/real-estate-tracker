@@ -1,2 +1,2 @@
-from .database import Base, engine
-from .models import *
+from .database import Base, engine, SessionLocal
+from .models import Property, PriceHistory

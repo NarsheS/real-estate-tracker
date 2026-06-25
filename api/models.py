@@ -10,7 +10,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
-from database import Base
+from .database import Base
 
 
 class Property(Base):
@@ -27,9 +27,9 @@ class Property(Base):
 
     image = Column(String)
 
-    area = Column(Float)
-
     url = Column(String)
+
+    area = Column(Float)
 
     created_at = Column(
         DateTime,
