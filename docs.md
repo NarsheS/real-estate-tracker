@@ -13,5 +13,8 @@ que nos impede de acessar.
 ## extractor.py
     Extrai as informações de um script dentro do html.
 
-## parser.py
-    Formata os dados extraídos para json.
+# Utils
+    Ultilidades basicamente.
+
+## parsers.py
+    Servem para formatar certos dados obtidos.

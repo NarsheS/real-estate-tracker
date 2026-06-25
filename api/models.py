@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 from .database import Base
 
-
+# Registrar propriedades
 class Property(Base):
     __tablename__ = "properties"
 
@@ -41,7 +41,7 @@ class Property(Base):
         back_populates="property"
     )
 
-
+# Registrar preços
 class PriceHistory(Base):
     __tablename__ = "price_history"
 
@@ -62,4 +62,26 @@ class PriceHistory(Base):
     property = relationship(
         "Property",
         back_populates="prices"
+    )
+
+# Para criar alertas
+class UserAlert(Base):
+    __tablename__ = "user_alerts"
+
+    id = Column(
+        Integer,
+        primary_key=True
+    )
+
+    city = Column(String)
+
+    max_price = Column(Float)
+
+    min_area = Column(Float)
+
+    email = Column(String)
+
+    active = Column(
+        Integer,
+        default=1
     )

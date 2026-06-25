@@ -1,15 +1,23 @@
 from api import PriceHistory
 
-def check_price_change(db, property_id: int, new_price: float):
+
+def compare_price(db, property_id: int, new_price: float):
     """
+    Compara o novo preço com o último registrado.
+
     Retorna:
-    - "caiu"
-    - "subiu"
-    - "manteve"
-    - None (primeiro preço)
+        None -> primeiro preço do imóvel
+
+        {
+            "status": "down" | "up" | "same",
+            "old_price": float,
+            "new_price": float,
+            "difference": float,
+            "percent": float
+        }
     """
 
-    last_price = (
+    last = (
         db.query(PriceHistory)
         .filter(
             PriceHistory.property_id == property_id
@@ -20,39 +28,27 @@ def check_price_change(db, property_id: int, new_price: float):
         .first()
     )
 
-    if not last_price:
+    if last is None:
         return None
-    
-    if new_price < last_price:
-        return "caiu"
-    
-    if new_price > last_price:
-        return "subiu"
-    
-    return "same"
 
-def get_price_change(db, property_id: int, new_price: float):
+    difference = new_price - last.price
 
-    last_price = (
-        db.query(PriceHistory)
-        .filter(
-            PriceHistory.property_id == property_id
-        )
-        .order_by(
-            PriceHistory.captured_at.desc()
-        )
-        .first()
-    )
+    percent = (
+        difference / last.price
+    ) * 100
 
-    if not last_price:
-        return None
-    
-    difference = new_price - last_price.price
+    if difference < 0:
+        status = "down"
 
-    percent = (difference / last_price.price) * 100
+    elif difference > 0:
+        status = "up"
+
+    else:
+        status = "same"
 
     return {
-        "old_price": last_price.price,
+        "status": status,
+        "old_price": last.price,
         "new_price": new_price,
         "difference": difference,
         "percent": percent

@@ -1,1 +1,2 @@
-from .price_monitor import check_price_change, get_price_change
+from .price_monitor import compare_price
+from .alerts import find_matching_alerts
