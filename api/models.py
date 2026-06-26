@@ -3,6 +3,7 @@ from sqlalchemy import (
     Integer,
     String,
     Float,
+    Boolean,
     DateTime,
     ForeignKey
 )
@@ -79,9 +80,15 @@ class UserAlert(Base):
 
     min_area = Column(Float)
 
-    email = Column(String)
+    email = Column(String, nullable=False)
 
     active = Column(
-        Integer,
-        default=1
+        Boolean,
+        default=True,
+        nullable=False
+    )
+
+    created_at = Column(
+        datetime,
+        default=lambda: datetime.now(timezone.utc)
     )

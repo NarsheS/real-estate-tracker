@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+# SETUP do banco de dados
 DATABASE_URL = "sqlite:///real_estate.db"
 
 engine = create_engine(

@@ -1,6 +1,6 @@
 from api import UserAlert
 
-
+# Alerta o usuário via email caso algum dado bata o requisito
 def find_matching_alerts(
     db,
     city: str,
@@ -10,7 +10,7 @@ def find_matching_alerts(
     alerts = (
         db.query(UserAlert)
         .filter(
-            UserAlert.active == 1
+            UserAlert.active == True
         )
         .all()
     )

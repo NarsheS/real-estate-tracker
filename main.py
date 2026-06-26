@@ -33,6 +33,7 @@ for ad in parsed:
         .first()
     )
 
+    # Se essa propriedade não estiver registrada (nova propriedade) registra ela no banco
     if property is None:
 
         property = Property(
@@ -46,6 +47,7 @@ for ad in parsed:
             area=ad["area"]
         )
 
+        # Salva propriedade
         db.add(property)
         db.flush()
 
@@ -60,6 +62,7 @@ for ad in parsed:
         new_price
     )
 
+    # Faz comparação de preços, dizendo se subiu, desceu ou se manteve igual
     if comparison:
 
         if comparison["status"] == "down":
@@ -98,6 +101,7 @@ for ad in parsed:
         price=new_price
     )
 
+    # Salva histórico de preço
     db.add(history)
 
     matches = find_matching_alerts(
@@ -107,6 +111,7 @@ for ad in parsed:
         property.area
     )
 
+    # Alerta o usuário caso tenha algum alerta
     for alert in matches:
 
         print("=" * 60)

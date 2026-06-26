@@ -1,6 +1,6 @@
 from api import PriceHistory
 
-
+# Compara os valores, preço atual com o último registrado
 def compare_price(db, property_id: int, new_price: float):
     """
     Compara o novo preço com o último registrado.
