@@ -1,75 +1,68 @@
 from scraper import get_page, get_next_data
 from utils import get_ads, parse_ad
-from services import compare_price, find_matching_alerts
-from api import Base, engine, SessionLocal, Property, PriceHistory
 
-# Conecta com o banco de dados
+from api import (
+    Base,
+    engine,
+    SessionLocal,
+    PropertyService,
+    PropertyRepository
+)
+
+
+# ==========================================================
+# Inicialização
+# ==========================================================
+
 Base.metadata.create_all(bind=engine)
+
 db = SessionLocal()
 
 url = "https://www.olx.com.br/imoveis/venda"
 
-# Acessa a página simulando um usuário no navegador
-html = get_page(url) 
+html = get_page(url)
 
-# Obtém os dados dentro da html, em um script de id __NEXT_DATA__
 data = get_next_data(html)
 
-# Obtém o alvo (anúncios) dentro do script
 ads = get_ads(data)
 
-# Formatando os dados para json
 parsed = [parse_ad(ad) for ad in ads]
 
+found_properties = set()
 
-# Tenta adicionar toda a informação do scrapper ao banco de dados
+# ==========================================================
+# Processa todos os anúncios
+# ==========================================================
+
 for ad in parsed:
 
-    property = (
-        db.query(Property)
-        .filter(
-            Property.external_id == str(ad["id"])
-        )
-        .first()
+    result = PropertyService.process_ad(
+        db,
+        ad
     )
 
-    # Se essa propriedade não estiver registrada (nova propriedade) registra ela no banco
-    if property is None:
-
-        property = Property(
-            source="OLX",
-            external_id=str(ad["id"]),
-            title=ad["title"],
-            city=ad["city"],
-            state=ad["state"],
-            image=ad["image"],
-            url=ad["url"],
-            area=ad["area"]
-        )
-
-        # Salva propriedade
-        db.add(property)
-        db.flush()
-
-    new_price = ad["price_raw"]
-
-    if new_price is None:
+    if result is None:
         continue
 
-    comparison = compare_price(
-        db,
-        property.id,
-        new_price
+    prop = result["property"]
+    comparison = result["comparison"]
+    alerts = result["alerts"]
+
+    found_properties.add(
+        prop.external_id
     )
 
-    # Faz comparação de preços, dizendo se subiu, desceu ou se manteve igual
+    # ======================================================
+    # Alteração de preço
+    # ======================================================
+
     if comparison:
 
         if comparison["status"] == "down":
 
             print("=" * 60)
             print("🔥 PREÇO CAIU")
-            print(property.title)
+            print(prop.title)
             print(
                 f"De R$ {comparison['old_price']:,.2f}"
             )
@@ -77,7 +70,7 @@ for ad in parsed:
                 f"Para R$ {comparison['new_price']:,.2f}"
             )
             print(
-                f"{comparison['percent']:.2f}%"
+                f"Variação: {comparison['percent']:.2f}%"
             )
             print("=" * 60)
 
@@ -85,41 +78,44 @@ for ad in parsed:
 
             print("=" * 60)
             print("📈 PREÇO SUBIU")
-            print(property.title)
+            print(prop.title)
+            print(
+                f"De R$ {comparison['old_price']:,.2f}"
+            )
+            print(
+                f"Para R$ {comparison['new_price']:,.2f}"
+            )
+            print(
+                f"Variação: {comparison['percent']:.2f}%"
+            )
             print("=" * 60)
-            
-        # OPCIONAL
-        elif comparison["status"] == "same":
 
-            print("=" * 60)
-            print("📈 PREÇO NÃO MUDOU")
-            print(property.title)
-            print("=" * 60)
+    # ======================================================
+    # Alertas
+    # ======================================================
 
-    history = PriceHistory(
-        property_id=property.id,
-        price=new_price
-    )
-
-    # Salva histórico de preço
-    db.add(history)
-
-    matches = find_matching_alerts(
-        db,
-        property.city,
-        new_price,
-        property.area
-    )
-
-    # Alerta o usuário caso tenha algum alerta
-    for alert in matches:
+    for alert in alerts:
 
         print("=" * 60)
         print(f"🔔 ALERTA PARA {alert.email}")
-        print(property.title)
-        print(f"Cidade: {property.city}")
-        print(f"Preço: R$ {new_price:,.2f}")
-        print(property.url)
+        print(prop.title)
+        print(f"Cidade: {prop.city}")
+        print(f"Preço: R$ {prop.last_price:,.2f}")
+        print(prop.url)
         print("=" * 60)
 
+# ==========================================================
+# Marca anúncios removidos
+# ==========================================================
+
+for prop in PropertyRepository.get_all(db):
+
+    if prop.external_id not in found_properties:
+
+        prop.is_active = False
+
+PropertyRepository.save(db)
+
 db.commit()
+
+db.close()

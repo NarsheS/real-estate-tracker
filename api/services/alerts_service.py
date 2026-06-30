@@ -1,12 +1,16 @@
 from api import UserAlert
 
-# Alerta o usuário via email caso algum dado bata o requisito
+
 def find_matching_alerts(
     db,
     city: str,
     price: float,
     area: float
 ):
+    """
+    Retorna todos os alertas que combinam com o imóvel.
+    """
+
     alerts = (
         db.query(UserAlert)
         .filter(
@@ -19,13 +23,15 @@ def find_matching_alerts(
 
     for alert in alerts:
 
-        if alert.city != city:
+        if alert.city.lower() != city.lower():
             continue
 
-        if price > alert.max_price:
+        if (
+            alert.max_price is not None
+            and price > alert.max_price
+        ):
             continue
 
-        # Se o usuário definiu área mínima
         if (
             alert.min_area is not None
             and area is not None
