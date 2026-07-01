@@ -1,20 +1,21 @@
-from api import Property
-from sqlalchemy import asc, desc
 from datetime import datetime
+
+from sqlalchemy import asc, desc
+
+from api import Property
 
 
 class PropertyRepository:
-    # ---------------------------------------
+
+    # =====================================================
     # Busca por ID
-    # ---------------------------------------
+    # =====================================================
 
     @staticmethod
     def get_by_id(db, property_id: int):
         return (
             db.query(Property)
-            .filter(
-                Property.id == property_id
-            )
+            .filter(Property.id == property_id)
             .first()
         )
 
@@ -22,29 +23,50 @@ class PropertyRepository:
     def get_by_external_id(db, external_id: str):
         return (
             db.query(Property)
-            .filter(
-                Property.external_id == external_id
-            )
+            .filter(Property.external_id == external_id)
             .first()
         )
 
-    # ---------------------------------------
-    # Criar e salvar
-    # ---------------------------------------
+    @staticmethod
+    def exists(db, external_id: str):
+        return (
+            db.query(Property)
+            .filter(Property.external_id == external_id)
+            .first()
+            is not None
+        )
+
+    # =====================================================
+    # Create / Update / Delete
+    # =====================================================
+
     @staticmethod
     def create(db, prop: Property):
         db.add(prop)
+        db.flush()
+        return prop
+
+    @staticmethod
+    def create(db):
+        db.flush()
+
+    @staticmethod
+    def update(db, prop: Property, **kwargs):
+        for key, value in kwargs.items():
+            setattr(prop, key, value)
+
         db.flush()
 
         return prop
 
     @staticmethod
-    def save(db):
-        db.flush()
+    def delete(db, prop: Property):
+        db.delete(prop)
 
-    # ---------------------------------------
-    # Search dinâmico
-    # --------------------------------------- 
+    # =====================================================
+    # Search
+    # =====================================================
+
     @staticmethod
     def search(
         db,
@@ -57,6 +79,7 @@ class PropertyRepository:
         source: str = None,
 
         title: str = None,
+        url: str = None,
 
         min_price: float = None,
         max_price: float = None,
@@ -66,28 +89,24 @@ class PropertyRepository:
 
         active: bool = True,
 
+        created_after: datetime = None,
+        created_before: datetime = None,
+
         order_by: str = "created_at",
         descending: bool = False,
 
         limit: int = None,
-        offset: int = None,
-
-        url: str = None,
-
-        created_after: datetime = None,
-        created_before: datetime = None
+        offset: int = None
     ):
 
         query = db.query(Property)
 
-        # ---------------------------------------
+        # ------------------------------
         # Filtros
-        # ---------------------------------------
+        # ------------------------------
 
         if id is not None:
-            query = query.filter(
-                Property.id == id
-            )
+            query = query.filter(Property.id == id)
 
         if external_id is not None:
             query = query.filter(
@@ -112,6 +131,11 @@ class PropertyRepository:
         if title is not None:
             query = query.filter(
                 Property.title.ilike(f"%{title}%")
+            )
+
+        if url is not None:
+            query = query.filter(
+                Property.url.ilike(f"%{url}%")
             )
 
         if min_price is not None:
@@ -139,11 +163,6 @@ class PropertyRepository:
                 Property.is_active == active
             )
 
-        if url is not None:
-            query = query.filter(
-                Property.url.ilike(f"%{url}%")
-            )
-
         if created_after is not None:
             query = query.filter(
                 Property.created_at >= created_after
@@ -154,37 +173,35 @@ class PropertyRepository:
                 Property.created_at <= created_before
             )
 
-        # ---------------------------------------
+        # ------------------------------
         # Ordenação
-        # ---------------------------------------
+        # ------------------------------
 
         columns = {
+            "id": Property.id,
             "price": Property.last_price,
             "area": Property.area,
-            "created_at": Property.created_at,
+            "title": Property.title,
             "city": Property.city,
             "state": Property.state,
-            "title": Property.title,
-            "last_seen": Property.last_seen_at
+            "created_at": Property.created_at,
+            "last_seen": Property.last_seen_at,
         }
 
-        column = columns.get(
-            order_by,
-            Property.created_at
+        if order_by not in columns:
+            raise ValueError(
+                f"Campo inválido para ordenação: {order_by}"
+            )
+
+        column = columns[order_by]
+
+        query = query.order_by(
+            desc(column) if descending else asc(column)
         )
 
-        if descending:
-            query = query.order_by(
-                desc(column)
-            )
-        else:
-            query = query.order_by(
-                asc(column)
-            )
-
-        # ---------------------------------------
+        # ------------------------------
         # Paginação
-        # ---------------------------------------
+        # ------------------------------
 
         if offset is not None:
             query = query.offset(offset)
@@ -192,27 +209,25 @@ class PropertyRepository:
         if limit is not None:
             query = query.limit(limit)
 
-        return query.all()
-    
+        # IMPORTANTE:
+        # retorna a Query, não a lista.
+        return query
 
-    # ---------------------------------------
-    # GET ALL
-    # ---------------------------------------
+    # =====================================================
+    # Utilitários
+    # =====================================================
+
     @staticmethod
     def get_all(db):
-        return db.query(Property).all()
-    
-    
-    # ---------------------------------------
-    # Delete para testes
-    # ---------------------------------------
-    @staticmethod
-    def delete(db, prop: Property):
-        db.delete(prop)
+        return (
+            PropertyRepository
+            .search(db)
+            .all()
+        )
 
-    # ---------------------------------------
-    # Count
-    # ---------------------------------------
     @staticmethod
     def count(db):
-        return db.query(Property).count()
+        return (
+            db.query(Property)
+            .count()
+        )
