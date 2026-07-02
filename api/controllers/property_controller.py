@@ -1,18 +1,13 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api import get_db
-from api import PropertyService
+from api import get_db, PropertyService
+from ..schemas.property_schema import PropertyResponse
 
 router = APIRouter(
     prefix="/properties",
     tags=["Properties"]
 )
-
-
-@router.get("/")
-def get_properties(db: Session = Depends(get_db)):
-    return PropertyService.search(db)
 
 @router.get("/{property_id}")
 def get_property(
@@ -44,3 +39,7 @@ def search_properties(
         min_area=min_area,
         max_area=max_area
     )
+
+@router.get("/", response_model=list[PropertyResponse])
+def get_properties(db: Session = Depends(get_db)):
+    return PropertyService.search(db)
