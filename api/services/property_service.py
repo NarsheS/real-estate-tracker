@@ -4,7 +4,7 @@ from api import Property
 
 from utils import compare_price
 
-from .alerts_service import find_matching_alerts
+from .alert_service import find_matching_alerts
 
 from ..repositories.property_repository import PropertyRepository
 from ..repositories.price_repository import PriceRepository
