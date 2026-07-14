@@ -47,7 +47,7 @@ class PropertyRepository:
         return prop
 
     @staticmethod
-    def create(db):
+    def save(db):
         db.flush()
 
     @staticmethod

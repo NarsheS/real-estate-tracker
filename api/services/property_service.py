@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+from fastapi import HTTPException
+
 from api import Property
 
 from utils import compare_price
@@ -18,16 +20,26 @@ class PropertyService:
 
     @staticmethod
     def get_by_id(db, property_id: int):
-        return PropertyRepository.get_by_id(
+
+        prop = PropertyRepository.get_by_id(
             db,
             property_id
         )
 
+        if prop is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Property not found."
+            )
+
+        return prop
+
     @staticmethod
     def search(db, **filters):
-        return PropertyRepository.search(
-            db,
-            **filters
+        return (
+            PropertyRepository
+            .search(db, **filters)
+            .all()
         )
 
     @staticmethod
@@ -60,7 +72,6 @@ class PropertyService:
 
     @staticmethod
     def count(db):
-
         return PropertyRepository.count(db)
 
     # ==========================================================
@@ -76,9 +87,7 @@ class PropertyService:
         properties = PropertyRepository.get_all(db)
 
         for prop in properties:
-
             if prop.external_id not in found_external_ids:
-
                 prop.is_active = False
 
         PropertyRepository.save(db)
@@ -89,7 +98,6 @@ class PropertyService:
 
     @staticmethod
     def process_ad(db, ad: dict):
-
         new_price = ad["price_raw"]
 
         if new_price is None:
@@ -107,33 +115,20 @@ class PropertyService:
         # ------------------------------------------------------
 
         if prop is None:
-
             prop = Property(
-
                 source="OLX",
-
                 external_id=external_id,
-
                 title=ad["title"],
-
                 city=ad["city"],
-
                 state=ad["state"],
-
                 image=ad["image"],
-
                 url=ad["url"],
-
                 area=ad["area"],
-
                 last_price=new_price,
-
                 last_seen_at=datetime.now(
                     timezone.utc
                 ),
-
                 is_active=True
-
             )
 
             PropertyRepository.create(
@@ -154,7 +149,6 @@ class PropertyService:
         # ------------------------------------------------------
 
         else:
-
             comparison = compare_price(
                 prop.last_price,
                 new_price
@@ -184,23 +178,14 @@ class PropertyService:
         # ------------------------------------------------------
 
         alerts = find_matching_alerts(
-
             db,
-
             prop.city,
-
             new_price,
-
             prop.area
-
         )
 
         return {
-
             "property": prop,
-
             "comparison": comparison,
-
             "alerts": alerts
-
         }

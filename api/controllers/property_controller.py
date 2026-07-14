@@ -9,17 +9,8 @@ router = APIRouter(
     tags=["Properties"]
 )
 
-@router.get("/{property_id}")
-def get_property(
-    property_id: int,
-    db: Session = Depends(get_db)
-):
-    return PropertyService.get_by_id(
-        db,
-        property_id
-    )
 
-@router.get("/search")
+@router.get("/search", response_model=list[PropertyResponse])
 def search_properties(
     city: str | None = None,
     state: str | None = None,
@@ -38,6 +29,16 @@ def search_properties(
         max_price=max_price,
         min_area=min_area,
         max_area=max_area
+    )
+
+@router.get("/{property_id}", response_model=PropertyResponse)
+def get_property(
+    property_id: int,
+    db: Session = Depends(get_db)
+):
+    return PropertyService.get_by_id(
+        db,
+        property_id
     )
 
 @router.get("/", response_model=list[PropertyResponse])
