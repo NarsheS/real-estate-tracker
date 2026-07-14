@@ -23,7 +23,12 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=AlertResponse)
+@router.post(
+        "/",
+        response_model=AlertResponse,
+        summary="Criar novo alerta",
+        description="Cria um novo alerta para notificar o usuário, com base na área, preço e/ou local."
+)
 def create_alert(
     data: AlertCreate,
     db: Session = Depends(get_db)
@@ -34,12 +39,22 @@ def create_alert(
     )
 
 
-@router.get("/", response_model=list[AlertResponse])
+@router.get(
+        "/",
+        response_model=list[AlertResponse],
+        summary="Lista todos os alertas criados",
+        description="Apresenta para o usuário todos os alertas que ele criou, com suas respectivas informações."
+)
 def get_alerts(db: Session = Depends(get_db)):
     return AlertService.get_all(db)
 
 
-@router.get("/{alert_id}", response_model=AlertResponse)
+@router.get(
+        "/{alert_id}", 
+        response_model=AlertResponse,
+        summary="Apresenta um alerta a partir de seu ID",
+        description="Apresenta um alerta e suas respectivas informações a partir do ID fornecido."
+)
 def get_alert(
     alert_id: int,
     db: Session = Depends(get_db)
@@ -58,7 +73,12 @@ def get_alert(
     return alert
 
 
-@router.put("/{alert_id}", response_model=AlertResponse)
+@router.put(
+        "/{alert_id}", 
+        response_model=AlertResponse,
+        summary="Edita um alerta",
+        description="Permite atualizar as informações de um alerta já criado a partir do seu ID."
+)
 def update_alert(
     alert_id: int,
     data: AlertUpdate,
@@ -79,7 +99,11 @@ def update_alert(
     return alert
 
 
-@router.delete("/{alert_id}")
+@router.delete(
+        "/{alert_id}",
+        summary="Deleta um alerta",
+        description="Deleta o alerta criado do banco de dados a partir de seu ID."
+)
 def delete_alert(
     alert_id: int,
     db: Session = Depends(get_db)

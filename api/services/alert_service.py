@@ -50,17 +50,11 @@ class AlertService:
 
     @staticmethod
     def create(db, data):
-
         alert = UserAlert(
-
             email=data.email,
-
             city=data.city,
-
             max_price=data.max_price,
-
             min_area=data.min_area,
-
             active=data.active
         )
 
