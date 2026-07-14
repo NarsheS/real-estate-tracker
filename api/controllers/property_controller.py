@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from api import get_db, PropertyService
 from ..schemas.property_schema import PropertyResponse
+from ..schemas.price_history_schema import PriceHistoryResponse
 
 router = APIRouter(
     prefix="/properties",
@@ -31,6 +32,25 @@ def search_properties(
         max_area=max_area
     )
 
+@router.get("/statistics")
+def get_statistics(db: Session = Depends(get_db)):
+    return PropertyService.get_statistics(db)
+
+@router.get("/cities")
+def get_cities(db: Session = Depends(get_db)):
+    return PropertyService.get_cities(db)
+
+@router.get("/states")
+def get_states(db: Session = Depends(get_db)):
+    return PropertyService.get_states(db)
+
+@router.get("/{property_id}/history", response_model=list[PriceHistoryResponse])
+def get_price_history(
+    property_id: int,
+    db: Session = Depends(get_db),
+):
+    return PropertyService.get_price_history(db, property_id)
+
 @router.get("/{property_id}", response_model=PropertyResponse)
 def get_property(
     property_id: int,
@@ -44,3 +64,6 @@ def get_property(
 @router.get("/", response_model=list[PropertyResponse])
 def get_properties(db: Session = Depends(get_db)):
     return PropertyService.search(db)
+
+
+

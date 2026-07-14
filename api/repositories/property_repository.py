@@ -231,3 +231,54 @@ class PropertyRepository:
             db.query(Property)
             .count()
         )
+    
+    @staticmethod
+    def count_active(db):
+        return (
+            db.query(Property)
+            .filter(Property.is_active == True)
+            .count()
+        )
+
+    @staticmethod
+    def count_inactive(db):
+        return (
+            db.query(Property)
+            .filter(Property.is_active == False)
+            .count()
+        )
+
+    @staticmethod
+    def get_cities(db):
+        return (
+            db.query(Property.city)
+            .distinct()
+            .order_by(Property.city)
+            .all()
+        )
+
+    @staticmethod
+    def get_states(db):
+        return (
+            db.query(Property.state)
+            .distinct()
+            .order_by(Property.state)
+            .all()
+        )
+
+    @staticmethod
+    def get_statistics(db):
+
+        total = PropertyRepository.count(db)
+        active = PropertyRepository.count_active(db)
+        inactive = PropertyRepository.count_inactive(db)
+
+        return {
+            "total": total,
+            "active": active,
+            "inactive": inactive,
+            "cities": db.query(Property.city).distinct().count(),
+            "states": db.query(Property.state).distinct().count(),
+            "active_percentage": round(active / total * 100, 2) if total else 0,
+            "inactive_percentage": round(inactive / total * 100, 2) if total else 0
+        }

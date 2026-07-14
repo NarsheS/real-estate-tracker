@@ -54,21 +54,16 @@ class PropertyService:
 
     @staticmethod
     def update(db, prop: Property, **data):
-
-        for key, value in data.items():
-            setattr(prop, key, value)
-
-        PropertyRepository.save(db)
-
-        return prop
+        return PropertyRepository.update(
+            db,
+            prop,
+            **data
+        )
 
     @staticmethod
     def delete(db, prop: Property):
-
-        PropertyRepository.delete(
-            db,
-            prop
-        )
+        PropertyRepository.delete(db, prop)
+        PropertyRepository.save(db)
 
     @staticmethod
     def count(db):
@@ -189,3 +184,47 @@ class PropertyService:
             "comparison": comparison,
             "alerts": alerts
         }
+    
+    @staticmethod
+    def count_active(db):
+        return PropertyRepository.count_active(db)
+
+    @staticmethod
+    def count_inactive(db):
+        return PropertyRepository.count_inactive(db)
+
+    @staticmethod
+    def get_cities(db):
+        return [
+            city[0]
+            for city in PropertyRepository.get_cities(db)
+            if city[0] is not None
+        ]
+
+    @staticmethod
+    def get_states(db):
+        return [
+            state[0]
+            for state in PropertyRepository.get_states(db)
+            if state[0] is not None
+        ]
+
+    @staticmethod
+    def get_statistics(db):
+        return PropertyRepository.get_statistics(db)
+
+    @staticmethod
+    def get_price_history(db, property_id: int):
+
+        prop = PropertyRepository.get_by_id(
+            db,
+            property_id
+        )
+
+        if prop is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Property not found."
+            )
+
+        return prop.prices
