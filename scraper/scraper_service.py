@@ -1,10 +1,11 @@
-from scraper import get_page, get_next_data
-from utils import get_ads, parse_ad
+from scraper import get_page_html, extract_ads
+from utils import parse_ad
 
 from api import (
     PropertyService,
     PropertyRepository
 )
+
 
 class ScraperService:
 
@@ -12,15 +13,25 @@ class ScraperService:
     def run(db):
         url = "https://www.olx.com.br/imoveis/venda"
 
-        html = get_page(url)
 
-        data = get_next_data(html)
+        # ==========================================================
+        # Coleta HTML renderizado pelo Playwright
+        # ==========================================================
 
-        ads = get_ads(data)
+        html = get_page_html(url)
 
-        parsed = [parse_ad(ad) for ad in ads]
+        ads = extract_ads(html)
+
+
+        # Converte para o formato usado pelo sistema
+        parsed = [
+            parse_ad(ad)
+            for ad in ads
+        ]
+
 
         found_properties = set()
+
 
         # ==========================================================
         # Processa todos os anúncios
@@ -33,16 +44,20 @@ class ScraperService:
                 ad
             )
 
+
             if result is None:
                 continue
+
 
             prop = result["property"]
             comparison = result["comparison"]
             alerts = result["alerts"]
 
+
             found_properties.add(
                 prop.external_id
             )
+
 
             # ======================================================
             # Alteração de preço
@@ -66,6 +81,7 @@ class ScraperService:
                     )
                     print("=" * 60)
 
+
                 elif comparison["status"] == "up":
 
                     print("=" * 60)
@@ -78,9 +94,11 @@ class ScraperService:
                         f"Para R$ {comparison['new_price']:,.2f}"
                     )
                     print(
-                        f"Variação: {comparison['percent']:.2f}%"
+                        f"Variação: {comparison['percent']:,.2f}%"
                     )
                     print("=" * 60)
+
+
 
             # ======================================================
             # Alertas
@@ -89,12 +107,18 @@ class ScraperService:
             for alert in alerts:
 
                 print("=" * 60)
-                print(f"🔔 ALERTA PARA {alert.email}")
+                print(
+                    f"🔔 ALERTA PARA {alert.email}"
+                )
                 print(prop.title)
                 print(f"Cidade: {prop.city}")
-                print(f"Preço: R$ {prop.last_price:,.2f}")
+                print(
+                    f"Preço: R$ {prop.last_price:,.2f}"
+                )
                 print(prop.url)
                 print("=" * 60)
+
+
 
         # ==========================================================
         # Marca anúncios removidos
@@ -103,7 +127,7 @@ class ScraperService:
         for prop in PropertyRepository.get_all(db):
 
             if prop.external_id not in found_properties:
-
                 prop.is_active = False
+
 
         PropertyRepository.save(db)

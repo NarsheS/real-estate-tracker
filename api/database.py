@@ -2,11 +2,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+db_url = os.getenv("DATABASE_URL")
+
 # SETUP do banco de dados
-DATABASE_URL = "sqlite:///real_estate.db"
 
 engine = create_engine(
-    DATABASE_URL,
+    db_url,
     connect_args={"check_same_thread": False}
 )
 

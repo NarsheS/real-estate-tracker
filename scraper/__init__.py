@@ -1,3 +1,2 @@
-from .client import get_page
-from .extractor import get_next_data
-from .scrapper_service import ScraperService
+from .browser import get_page_html
+from .extractor import extract_ads

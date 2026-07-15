@@ -1,4 +1,4 @@
-from scraper import ScraperService
+from scraper.scraper_service import ScraperService
 
 from api import (
     Base,

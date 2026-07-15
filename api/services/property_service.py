@@ -93,7 +93,7 @@ class PropertyService:
 
     @staticmethod
     def process_ad(db, ad: dict):
-        new_price = ad["price_raw"]
+        new_price = ad["price"]
 
         if new_price is None:
             return None

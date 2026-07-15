@@ -3,6 +3,7 @@
 
 ## Instalação
     pip install -r requirements.txt
+    playwright install chromium
 
 ## Run api & swagger docs - Vai mostrar todos os endpints - OBS: ativar .venv primeiro
     .venv/scripts/activate.ps1
